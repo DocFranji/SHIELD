@@ -1,0 +1,141 @@
+rules:
+  - id: sql-injection-template-literal
+    name: SQL Injection via Template Literal
+    cwe: CWE-89
+    owasp: A03:2021 – Injection
+    severity: critical
+    confidence: high
+    description: |
+      SQL query constructed with template literal string interpolation.
+      Attackers can inject arbitrary SQL by controlling the interpolated values.
+    patterns:
+      - pattern: db.query(`...${...}...`)
+      - pattern: connection.query(`...${...}...`)
+      - pattern: sequelize.query(`...${...}...`)
+    fix: Use parameterized queries with placeholders and pass user values as an array
+
+  - id: sql-injection-raw-unsafe
+    name: Prisma $queryRawUnsafe SQL Injection
+    cwe: CWE-89
+    owasp: A03:2021 – Injection
+    severity: critical
+    confidence: high
+    description: |
+      Prisma's $queryRawUnsafe function is called with a dynamic string.
+      This bypasses Prisma's query parameterization, allowing SQL injection.
+    patterns:
+      - pattern: prisma.$queryRawUnsafe(...)
+    fix: Use prisma.$queryRaw with tagged template literals for safe parameterization
+
+  - id: command-injection-exec
+    name: Command Injection via child_process.exec
+    cwe: CWE-78
+    owasp: A03:2021 – Injection
+    severity: critical
+    confidence: high
+    description: |
+      Shell command constructed with user-controlled input and passed to exec().
+      Attackers can inject additional commands using shell metacharacters.
+    patterns:
+      - pattern: exec(`...${req....}...`)
+      - pattern: execSync(`...${req....}...`)
+    fix: Use execFile() with an array of arguments to avoid shell interpretation
+
+  - id: xss-dangerous-inner-html
+    name: XSS via dangerouslySetInnerHTML
+    cwe: CWE-79
+    owasp: A03:2021 – Injection
+    severity: high
+    confidence: high
+    description: |
+      React's dangerouslySetInnerHTML prop used without sanitizing content.
+      Can lead to Cross-Site Scripting (XSS) if content contains HTML/JS.
+    patterns:
+      - pattern: <... dangerouslySetInnerHTML={{ __html: ... }} ...>
+    fix: Sanitize with DOMPurify.sanitize() before passing to dangerouslySetInnerHTML
+
+  - id: path-traversal-fs
+    name: Path Traversal via fs.readFile
+    cwe: CWE-22
+    owasp: A01:2021 – Broken Access Control
+    severity: high
+    confidence: high
+    description: |
+      File system operation with a path that includes user-controlled input.
+      Attackers can use ../ sequences to access arbitrary files.
+    patterns:
+      - pattern: fs.readFile(path.join(..., req.params...), ...)
+      - pattern: fs.readFileSync(req.params..., ...)
+    fix: Resolve path and verify it starts with allowed base directory
+
+  - id: hardcoded-credentials
+    name: Hardcoded Credentials
+    cwe: CWE-798
+    owasp: A07:2021 – Identification and Authentication Failures
+    severity: high
+    confidence: high
+    description: |
+      Sensitive credential (password, secret, API key) hardcoded as a string literal.
+      These are visible in source code and version control history.
+    patterns:
+      - pattern: const password = "..."
+      - pattern: const apiKey = "..."
+      - pattern: const secret = "..."
+      - pattern: const token = "..."
+    fix: Use environment variables (process.env.SECRET_KEY) and a secrets manager
+
+  - id: idor-direct-id-lookup
+    name: Insecure Direct Object Reference (IDOR)
+    cwe: CWE-639
+    owasp: A01:2021 – Broken Access Control
+    severity: high
+    confidence: medium
+    description: |
+      Database lookup using req.params.id without verifying the authenticated
+      user has permission to access the requested resource.
+    patterns:
+      - pattern: Model.findById(req.params.id)
+      - pattern: Model.findOne({ id: req.params.id })
+    fix: Add ownership check to query filter (e.g., { id: req.params.id, userId: session.userId })
+
+  - id: eval-dynamic-input
+    name: Code Injection via eval()
+    cwe: CWE-94
+    owasp: A03:2021 – Injection
+    severity: critical
+    confidence: high
+    description: |
+      eval() called with dynamic or user-controlled content.
+      This allows execution of arbitrary JavaScript code.
+    patterns:
+      - pattern: eval(req....)
+      - pattern: eval(userInput)
+    fix: Remove eval() entirely. Use JSON.parse() for data, or explicit APIs for dynamic behavior
+
+  - id: nosql-injection
+    name: NoSQL Injection
+    cwe: CWE-943
+    owasp: A03:2021 – Injection
+    severity: high
+    confidence: medium
+    description: |
+      MongoDB/Mongoose query built directly from req.body without sanitization.
+      Attackers can inject MongoDB operators to bypass authentication or exfiltrate data.
+    patterns:
+      - pattern: Model.find(req.body)
+      - pattern: Model.findOne(req.body)
+    fix: Extract and validate specific fields from req.body using a schema validator (Zod)
+
+  - id: prototype-pollution-object-assign
+    name: Prototype Pollution via Object.assign
+    cwe: CWE-1321
+    owasp: A08:2021 – Software and Data Integrity Failures
+    severity: high
+    confidence: medium
+    description: |
+      Object.assign() called with user-controlled external input.
+      If input contains __proto__ or constructor keys, it can pollute the Object prototype.
+    patterns:
+      - pattern: Object.assign({}, ..., req.body)
+      - pattern: Object.assign(target, userInput)
+    fix: Use Object.create(null) as merge target, or sanitize with a Zod schema first

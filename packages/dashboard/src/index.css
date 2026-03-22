@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design Tokens ───────────────────────────────────────────────────────── */
+:root {
+  --bg:          #010812;
+  --bg-2:        #020f28;
+  --bg-card:     #050d20;
+  --border:      #0c2350;
+  --border-hi:   #1a4090;
+  --primary:     #1562f0;
+  --primary-d:   #0040cc;
+  --primary-l:   #4d8fff;
+  --accent:      #00ccff;
+  --text:        #c0d4f0;
+  --text-muted:  #4d6a9a;
+  --text-dim:    #1a2d4a;
+  --red:         #ff3344;
+  --orange:      #ff8844;
+  --yellow:      #ffcc00;
+  --green:       #00ff88;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Electrolize', sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #0c2a55; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* ── Background grid ─────────────────────────────────────────────────────── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(21, 98, 240, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 98, 240, 0.07) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* ── Scan line animation ─────────────────────────────────────────────────── */
+.scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0,204,255,0.7) 50%, transparent 100%);
+  animation: scan-anim 5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes scan-anim {
+  0%   { top: -2px; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* ── Card corner cut ─────────────────────────────────────────────────────── */
+.card-cut {
+  position: absolute;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 28px 28px 0 0;
+  border-color: var(--primary) transparent transparent transparent;
+}
+
+/* ── Card hover ──────────────────────────────────────────────────────────── */
+.card-hover {
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.card-hover:hover {
+  border-color: var(--border-hi) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(21, 98, 240, 0.18);
+}
+
+/* ── Step bar (bottom accent on hover) ───────────────────────────────────── */
+.step-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+.card-hover:hover .step-bar { transform: scaleX(1); }
+
+/* ── Glow utilities ──────────────────────────────────────────────────────── */
+.glow-primary  { box-shadow: 0 0 40px rgba(21, 98, 240, 0.25); }
+.glow-critical { box-shadow: 0 0 20px rgba(255, 51, 68, 0.3); }
+.glow-safe     { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+
+/* ── Severity badges ─────────────────────────────────────────────────────── */
+.badge-critical { background: rgba(255, 51, 68, 0.1);  color: #ff3344; border: 1px solid rgba(255, 51, 68, 0.35); }
+.badge-high     { background: rgba(255, 136, 68, 0.1); color: #ff8844; border: 1px solid rgba(255, 136, 68, 0.35); }
+.badge-medium   { background: rgba(255, 204, 0, 0.1);  color: #ffcc00; border: 1px solid rgba(255, 204, 0, 0.35); }
+.badge-low      { background: rgba(0, 204, 255, 0.1);  color: #00ccff; border: 1px solid rgba(0, 204, 255, 0.35); }
+.badge-info     { background: rgba(77, 106, 154, 0.15); color: #4d6a9a; border: 1px solid rgba(77, 106, 154, 0.3); }
+.badge-safe     { background: rgba(0, 255, 136, 0.1);  color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3); }
+
+/* ── Section tag label ───────────────────────────────────────────────────── */
+.section-tag {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ── Goldman title ───────────────────────────────────────────────────────── */
+.font-title {
+  font-family: 'Goldman', sans-serif;
+  letter-spacing: 4px;
+}
+
+/* ── Chakra Petch label ──────────────────────────────────────────────────── */
+.font-label {
+  font-family: 'Chakra Petch', sans-serif;
+  letter-spacing: 2px;
+}
+
+/* ── Scan button pulse ───────────────────────────────────────────────────── */
+@keyframes scanPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(21, 98, 240, 0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(21, 98, 240, 0); }
+}
+.scan-pulse:hover { animation: scanPulse 1.5s infinite; }
+
+/* ── Text gradient ───────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #4d8fff, #c0d4f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* ── Input / select base ─────────────────────────────────────────────────── */
+input, select, textarea {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 12px;
+  transition: border-color 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ── Code / pre blocks ───────────────────────────────────────────────────── */
+code, pre {
+  font-family: 'Chakra Petch', monospace;
+  font-size: 12px;
+  background: rgba(21, 98, 240, 0.08);
+  border: 1px solid rgba(21, 98, 240, 0.2);
+  color: var(--accent);
+  border-radius: 2px;
+}
+pre { padding: 12px 14px; }
+code { padding: 1px 5px; }

@@ -1,0 +1,133 @@
+================================================================================
+  SHIELD — How It Works
+================================================================================
+
+SHIELD is a security scanner built as a monorepo with four packages:
+core (engine), cli (interface), mcp-server (IDE integration), dashboard (UI).
+
+────────────────────────────────────────────────────────────────────────────────
+  SCANNING PIPELINE
+────────────────────────────────────────────────────────────────────────────────
+
+  User runs: shield scan ./my-project
+                │
+                ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │                     4 SCANNERS                          │
+  │                                                         │
+  │  SAST          Parses JS/TS files into an AST using     │
+  │                @babel/parser, then walks the tree       │
+  │                looking for dangerous patterns:          │
+  │                SQL injection, XSS, command injection,   │
+  │                hardcoded secrets, IDOR, and 6 more.     │
+  │                                                         │
+  │  SCA           Reads package.json / requirements.txt,   │
+  │                then batch-queries the OSV API to check  │
+  │                every dependency for known CVEs.         │
+  │                                                         │
+  │  Secrets       Scans every file with 18+ regex patterns │
+  │                (AWS, Stripe, OpenAI, GitHub, etc.) plus │
+  │                Shannon entropy for unknown high-entropy  │
+  │                strings. Masks detected values.          │
+  │                                                         │
+  │  IaC           Reads Dockerfile, docker-compose.yml,    │
+  │                next.config.js, vercel.json, .env, etc.  │
+  │                Flags root containers, CORS wildcards,   │
+  │                exposed secrets, and missing .gitignore. │
+  └─────────────────────────────────────────────────────────┘
+                │
+                │  Raw findings (can be 40–100+ per project)
+                ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │                   AUTOTRIAGE ENGINE                     │
+  │                                                         │
+  │  1. Reachability   Builds an import graph of the whole  │
+  │                    project. Marks CVEs as not-reachable │
+  │                    if the vulnerable package/function   │
+  │                    is never actually imported.          │
+  │                                                         │
+  │  2. Deduplication  Groups findings that refer to the    │
+  │                    same root cause (same file+line,     │
+  │                    same CVE in multiple lockfiles,      │
+  │                    same secret in multiple files).      │
+  │                                                         │
+  │  3. Context        Detects the project's framework,     │
+  │                    database usage, and deploy target.   │
+  │                    Downgrades irrelevant findings       │
+  │                    (e.g. SQL injection in a frontend).  │
+  │                                                         │
+  │  4. Auto-ignore    Silently drops low-signal noise:     │
+  │                    dev-only CVEs with CVSS < 4.0,       │
+  │                    secrets in test files, unreachable   │
+  │                    transitive dependencies.             │
+  └─────────────────────────────────────────────────────────┘
+                │
+                │  Actionable findings (typically 5–15)
+                ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │                      OUTPUT                             │
+  │                                                         │
+  │  CLI        Color-coded table in terminal, security     │
+  │             score, noise reduction %, fix suggestions   │
+  │                                                         │
+  │  Dashboard  React web app showing score gauge, trend    │
+  │             chart, filterable findings table, dep health│
+  │                                                         │
+  │  MCP Server Injects security context into AI coding     │
+  │             tools (Cursor, Claude Code, VS Code) so     │
+  │             the AI avoids writing vulnerable code       │
+  │                                                         │
+  │  CI/CD      Exit code 1 if critical/high findings exist │
+  │             (configurable threshold). Blocks merges.    │
+  └─────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+  MCP SERVER — HOW IDE INTEGRATION WORKS
+────────────────────────────────────────────────────────────────────────────────
+
+  SHIELD runs a local MCP (Model Context Protocol) server that your AI coding
+  assistant connects to. It exposes four tools the AI can call:
+
+    shield_scan_file          Scan a specific file before suggesting edits
+    shield_check_dependency   Check a package for CVEs before npm install
+    shield_get_guardrails     Get framework-specific security rules to follow
+    shield_validate_env       Verify .env secrets aren't accidentally exposed
+
+  The AI reads the active guardrails resource (Markdown rules) at the start of
+  each session, which instructs it to: use parameterized queries, validate auth
+  on every route, avoid NEXT_PUBLIC_ for secrets, etc.
+
+  Net effect: vulnerabilities are prevented before they're written, not caught
+  after the fact.
+
+────────────────────────────────────────────────────────────────────────────────
+  SECURITY SCORE
+────────────────────────────────────────────────────────────────────────────────
+
+  Score (0–100) computed as:
+
+    100
+    - (critical findings × 20)
+    - (high findings    × 8)
+    - (medium findings  × 3)
+    - (low findings     × 1)
+    + (auto-ignored noise bonus: up to +10)
+
+  Grade: A+ (95–100) · A (85–94) · B (70–84) · C (55–69) · D (40–54) · F (<40)
+
+────────────────────────────────────────────────────────────────────────────────
+  FILE STRUCTURE (brief)
+────────────────────────────────────────────────────────────────────────────────
+
+  shield/
+  ├── packages/
+  │   ├── core/          Scanners + triage engine (pure TypeScript, no UI)
+  │   ├── cli/           'shield' command-line tool
+  │   ├── mcp-server/    MCP server for Cursor / Claude Code / VS Code
+  │   └── dashboard/     React + Vite web dashboard (runs on localhost:5173)
+  ├── rules/             YAML rule definitions for SAST and secrets
+  ├── test-fixtures/     Intentionally vulnerable files for testing
+  ├── REQUIREMENTS.txt   This project's setup guide
+  └── WORKFLOW.txt       This file
+
+================================================================================

@@ -1,0 +1,132 @@
+================================================================================
+  SHIELD — Security Platform | Requirements & Setup
+================================================================================
+
+RUNTIME REQUIREMENTS
+────────────────────
+Node.js        >= 20.0.0    https://nodejs.org/
+npm            >= 10.0.0    (comes with Node.js)
+Git            >= 2.40.0    https://git-scm.com/
+
+OPTIONAL (for Python scanning support)
+Python         >= 3.10      https://python.org/
+
+================================================================================
+  INSTALLATION
+================================================================================
+
+1. Clone the repository
+   ─────────────────────
+   git clone https://github.com/DocFranji/shield.git
+   cd shield
+
+2. Install all dependencies (monorepo — installs everything at once)
+   ──────────────────────────────────────────────────────────────────
+   npm install
+
+3. Build all packages
+   ───────────────────
+   npm run build
+
+   Or build individually:
+   cd packages/core    && npm run build
+   cd packages/cli     && npm run build
+   cd packages/mcp-server && npm run build
+   cd packages/dashboard  && npm run build
+
+================================================================================
+  NPM PACKAGES — AUTO-INSTALLED via npm install
+================================================================================
+
+ROOT (monorepo tooling)
+  turbo             ^2.0.0    Monorepo build orchestration
+  typescript        ^5.4.0    TypeScript compiler
+  @types/node       ^20.0.0   Node.js type definitions
+
+packages/core (scanning engine)
+  @babel/parser     ^7.24.0   JavaScript/TypeScript AST parser
+  @babel/traverse   ^7.24.0   AST traversal for SAST analysis
+  @babel/types      ^7.24.0   AST node type utilities
+  fast-glob         ^3.3.2    File system glob matching
+  js-yaml           ^4.1.0    YAML config file parsing
+
+packages/cli (command-line interface)
+  chalk             ^5.3.0    Terminal color output
+  commander         ^12.0.0   CLI argument parsing
+  ora               ^8.0.0    Terminal spinner/progress
+  js-yaml           ^4.1.0    Config file parsing
+
+packages/mcp-server (IDE integration)
+  @modelcontextprotocol/sdk  ^1.0.0  MCP protocol implementation
+
+packages/dashboard (web UI)
+  react             ^18.3.0   UI framework
+  react-dom         ^18.3.0   DOM rendering
+  react-router-dom  ^6.23.0   Client-side routing
+  recharts          ^2.12.0   Charts and data visualization
+  lucide-react      ^0.390.0  Icon library
+  clsx              ^2.1.0    Conditional class names
+  tailwindcss       ^3.4.0    Utility-first CSS framework
+  vite              ^5.3.0    Frontend build tool
+  @vitejs/plugin-react ^4.3.0 Vite React plugin
+
+================================================================================
+  EXTERNAL APIs (no key required — all free & open)
+================================================================================
+
+  OSV API           https://api.osv.dev          Vulnerability database
+                    Used by: packages/core/scanners/sca
+                    Rate limit: none (free, open)
+
+  GitHub Advisory   https://api.github.com/advisories
+                    Used by: packages/core/scanners/sca (enrichment)
+                    Rate limit: 60 req/hour unauthenticated
+                    Set GITHUB_TOKEN env var for 5000 req/hour
+
+================================================================================
+  ENVIRONMENT VARIABLES (optional)
+================================================================================
+
+  GITHUB_TOKEN      GitHub personal access token
+                    Purpose: Higher rate limit for GitHub Advisory API
+                    Required: No (uses public rate limit without it)
+
+  SHIELD_PORT       Port for dashboard web server (default: 5173)
+  SHIELD_HOST       Host for dashboard web server (default: localhost)
+
+================================================================================
+  RUNNING SHIELD
+================================================================================
+
+Dashboard (web UI):
+  cd packages/dashboard
+  npm run dev
+  → Opens at http://localhost:5173
+
+CLI (scan a project):
+  node packages/cli/dist/index.js scan /path/to/your/project
+  node packages/cli/dist/index.js scan --quick .
+  node packages/cli/dist/index.js report --format markdown
+
+MCP Server (for Cursor / Claude Code / VS Code):
+  node packages/mcp-server/dist/index.js
+
+  Add to your IDE's MCP config:
+  {
+    "mcpServers": {
+      "shield": {
+        "command": "node",
+        "args": ["/path/to/shield/packages/mcp-server/dist/index.js"]
+      }
+    }
+  }
+
+================================================================================
+  TESTED ON
+================================================================================
+
+  Windows 11  +  Node.js 20.x  +  npm 10.x     ✓ Confirmed
+  macOS 14    +  Node.js 20.x  +  npm 10.x     ✓ Expected
+  Ubuntu 22   +  Node.js 20.x  +  npm 10.x     ✓ Expected
+
+================================================================================

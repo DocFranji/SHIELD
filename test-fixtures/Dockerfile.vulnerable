@@ -1,0 +1,45 @@
+# SHIELD Test Fixture — Dockerfile with intentional security issues
+# DO NOT USE IN PRODUCTION
+
+# Issue 1: Using :latest tag (not reproducible, CWE-1104)
+FROM node:latest
+
+# Issue 2: Installing unnecessary packages (increases attack surface)
+RUN apt-get update && apt-get install -y \
+  curl \
+  wget \
+  vim \
+  git \
+  gcc \
+  make \
+  python3 \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Issue 3: Copying .env file into image (exposes secrets in layers, CWE-798)
+COPY .env .
+
+# Issue 4: Hardcoded secret in ENV (visible in docker inspect, CWE-798)
+ENV DATABASE_PASSWORD=SuperSecret123
+ENV API_SECRET_KEY=my-production-api-key-12345
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy source
+COPY . .
+
+# Issue 5: Downloading over HTTP (MITM vulnerable, CWE-829)
+RUN wget http://example.com/setup.sh && bash setup.sh
+
+RUN npm run build
+
+# Issue 6: No USER directive — runs as root (CWE-250)
+# USER node  <-- this is commented out
+
+EXPOSE 3000
+
+# Issue 7: Running multiple processes without proper init
+CMD ["npm", "start"]
